@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LanceDB Vector Index Manager • EmbeddingGemma 2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="manage-page-body">
+  <div class="container manage-container">
+    <!-- Navbar -->
+    <header class="navbar manage-navbar">
+      <div class="navbar-left">
+        <a href="/" class="back-link">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>Back to Search</span>
+        </a>
+        <div class="logo-divider"></div>
+        <div class="logo">
+          <span class="logo-badge badge-lance">LanceDB Arrow</span>
+          <h1>Vector Index Manager</h1>
+        </div>
+      </div>
+      <div class="navbar-right">
+        <div class="status-indicator">
+          <span id="global-status-dot" class="status-dot"></span>
+          <span id="global-status-text">Ready</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Top KPI Dashboard Cards -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap icon-cyan">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+          </svg>
+        </div>
+        <div class="kpi-content">
+          <span class="kpi-label">Vectors in LanceDB</span>
+          <div class="kpi-val-group">
+            <span id="kpi-indexed-count" class="kpi-value">--</span>
+            <span class="kpi-sub">/ 31,783 Flickr30k</span>
+          </div>
+          <div class="kpi-meta">
+            <span id="kpi-coverage-pct">0% dataset indexed</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap icon-purple">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </div>
+        <div class="kpi-content">
+          <span class="kpi-label">LanceDB Disk Footprint</span>
+          <div class="kpi-val-group">
+            <span id="kpi-disk-size" class="kpi-value">-- MB</span>
+          </div>
+          <div class="kpi-meta">
+            <span>Columnar Apache Arrow</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap icon-amber">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+            <path d="M2 12h20"></path>
+          </svg>
+        </div>
+        <div class="kpi-content">
+          <span class="kpi-label">Embedding Dimensions</span>
+          <div class="kpi-val-group">
+            <span class="kpi-value">768-D</span>
+            <span class="kpi-sub">Float32</span>
+          </div>
+          <div class="kpi-meta">
+            <span>Normalized Unit Sphere</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap icon-emerald">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+        </div>
+        <div class="kpi-content">
+          <span class="kpi-label">Inference Engine</span>
+          <div class="kpi-val-group">
+            <span class="kpi-value">EmbeddingGemma 2</span>
+          </div>
+          <div class="kpi-meta">
+            <span>ONNX Runtime (CPU Offline)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Indexing Controller Section -->
+    <section class="manage-card index-controller-card">
+      <div class="manage-card-header">
+        <div>
+          <h2>Incremental Indexing Controller</h2>
+          <p class="manage-card-subtitle">Batch-process Flickr30k images using EmbeddingGemma 2's vision encoder and append 768-D vectors into LanceDB.</p>
+        </div>
+        <div class="card-status-pill">
+          <span id="job-status-badge" class="badge badge-idle">Worker Idle</span>
+        </div>
+      </div>
+
+      <div class="controller-body">
+        <div class="control-input-row">
+          <div class="input-field-group">
+            <label for="target-input">Target Total Images</label>
+            <div class="input-with-addons">
+              <input type="number" id="target-input" min="1" max="31783" value="250" placeholder="e.g. 250">
+              <span class="input-addon">images</span>
+            </div>
+          </div>
+
+          <div class="presets-group">
+            <span class="presets-label">Quick Add:</span>
+            <div class="preset-buttons">
+              <button class="btn-preset" data-add="50">+50</button>
+              <button class="btn-preset" data-add="100">+100</button>
+              <button class="btn-preset" data-add="250">+250</button>
+              <button class="btn-preset" data-add="500">+500</button>
+            </div>
+          </div>
+
+          <div class="action-buttons-group">
+            <button id="start-btn" class="btn btn-primary btn-action">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span>Start Indexing</span>
+            </button>
+            <button id="stop-btn" class="btn btn-danger btn-action" disabled>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                <rect x="6" y="6" width="12" height="12"></rect>
+              </svg>
+              <span>Pause / Stop</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div id="progress-container" class="progress-container">
+          <div class="progress-header">
+            <span id="progress-message" class="progress-message">Worker is ready to index images.</span>
+            <span id="progress-percent" class="progress-percent">0%</span>
+          </div>
+          <div class="progress-bar-track">
+            <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%"></div>
+          </div>
+          <div class="progress-meta-row">
+            <span id="meta-speed">Speed: -- s/img</span>
+            <span id="meta-eta">ETA: --</span>
+            <span id="meta-remaining">Remaining: -- images</span>
+          </div>
+        </div>
+
+        <!-- Live Streaming Preview of Currently Encoded Image -->
+        <div id="live-inspect-card" class="live-inspect-card hidden">
+          <div class="live-inspect-thumb-wrap">
+            <img id="live-thumb" src="" alt="Encoding sample" class="live-thumb">
+            <div class="live-encoding-badge">
+              <span class="pulse-ring"></span>
+              <span>Encoding</span>
+            </div>
+          </div>
+          <div class="live-inspect-details">
+            <div class="live-inspect-top">
+              <span id="live-sample-id" class="live-sample-tag">Sample #--</span>
+              <span class="live-tag-lancedb">Writing to LanceDB...</span>
+            </div>
+            <p id="live-caption" class="live-caption">Caption loading...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LanceDB Table Inspector Section -->
+    <section class="manage-card table-inspector-card">
+      <div class="manage-card-header">
+        <div>
+          <h2>LanceDB Table Browser</h2>
+          <p class="manage-card-subtitle">Real-time inspection of recently persisted Apache Arrow records in table <code>images</code>.</p>
+        </div>
+        <button id="refresh-records-btn" class="btn-refresh">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          <span>Refresh Table</span>
+        </button>
+      </div>
+
+      <div class="records-table-wrap">
+        <table class="records-table">
+          <thead>
+            <tr>
+              <th style="width: 70px;">Image</th>
+              <th style="width: 100px;">Sample ID</th>
+              <th>Primary Caption</th>
+              <th style="width: 280px;">768-D Vector (Preview)</th>
+              <th style="width: 90px; text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="records-table-body">
+            <tr>
+              <td colspan="5" class="table-loading">Loading LanceDB records...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="/static/manage.js"></script>
+</body>
+</html>

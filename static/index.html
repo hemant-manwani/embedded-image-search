@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EmbeddingGemma 2 • Fullscreen Multimodal Search</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="fullscreen-search-body">
+
+  <!-- Ultra-Minimal Floating Top Header -->
+  <header class="floating-header">
+    <div class="header-brand">
+      <div class="header-logo-icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </div>
+      <span class="header-title">EmbeddingGemma 2</span>
+      <span class="engine-pill">LanceDB SIMD</span>
+    </div>
+
+    <div class="header-actions">
+      <div id="live-db-pill" class="live-db-pill">
+        <span class="status-dot"></span>
+        <span id="nav-db-count">LanceDB Ready</span>
+      </div>
+      <a href="/manage" class="btn-manage-link" title="Open Vector Index Manager">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+          <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+        </svg>
+        <span>Index Manager &rarr;</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Floating Active Search Summary Pill (appears at top center when search is active) -->
+  <div id="search-active-pill" class="search-active-pill hidden">
+    <span id="search-active-query" class="active-query-text">"a dog in snow"</span>
+    <span class="pill-divider">•</span>
+    <span id="search-active-stats" class="active-stats-text">16 results (74ms)</span>
+    <button id="clear-search-btn" class="btn-clear-search" title="Reset to Gallery">&times;</button>
+  </div>
+
+  <!-- Loading Overlay / Shimmer -->
+  <div id="search-loader" class="search-loader hidden">
+    <div class="loader-pulse">
+      <div class="loader-orb"></div>
+      <span id="loader-text">Embedding query &amp; scanning LanceDB vectors...</span>
+    </div>
+  </div>
+
+  <!-- Fullscreen Masonry Image Canvas -->
+  <main class="masonry-canvas">
+    <div id="masonry-grid" class="masonry-grid">
+      <!-- Cards dynamically rendered here -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="empty-state hidden">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </div>
+      <h3>No matches found in LanceDB</h3>
+      <p>Try searching for other objects, people, scenes, or index more images in the Index Manager.</p>
+    </div>
+  </main>
+
+  <!-- Bottom-Center Floating Search Dock -->
+  <footer class="bottom-search-dock">
+    <!-- Suggestion Chips Bar -->
+    <div class="dock-chips-bar" id="dock-chips">
+      <button class="dock-chip" data-query="a dog playing in the grass">🐕 dog in grass</button>
+      <button class="dock-chip" data-query="people walking on the beach">🏖️ beach walking</button>
+      <button class="dock-chip" data-query="cyclist riding on the road">🚴 cyclist</button>
+      <button class="dock-chip" data-query="two men talking outdoors">👥 two men</button>
+      <button class="dock-chip" data-query="a girl smiling dancing">💃 dancing girl</button>
+      <button class="dock-chip" data-query="snowy winter mountains">❄️ winter snow</button>
+    </div>
+
+    <!-- Search Input Bar -->
+    <form id="search-form" class="dock-search-form">
+      <div class="dock-search-input-wrap">
+        <svg class="dock-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+
+        <input 
+          type="text" 
+          id="search-input" 
+          class="dock-input" 
+          placeholder="Search images with EmbeddingGemma 2..." 
+          autocomplete="off"
+          spellcheck="false"
+          required
+        >
+
+        <div class="dock-search-right">
+          <span class="dock-shortcut-hint">↵ Enter</span>
+          <button type="submit" id="search-submit-btn" class="dock-submit-btn" aria-label="Search">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </form>
+  </footer>
+
+  <!-- Lightbox Modal for Full View -->
+  <dialog id="lightbox-dialog" class="lightbox-dialog">
+    <div class="lightbox-container">
+      <button id="lightbox-close-btn" class="lightbox-close" aria-label="Close dialog">&times;</button>
+      <div class="lightbox-content">
+        <div class="lightbox-media">
+          <img id="lightbox-img" src="" alt="Fullscreen image">
+        </div>
+        <div class="lightbox-sidebar">
+          <div class="lightbox-header-row">
+            <span id="lightbox-sample-tag" class="sample-badge">Sample #--</span>
+            <span id="lightbox-match-badge" class="score-tag">--% Match</span>
+          </div>
+
+          <div class="lightbox-section">
+            <h4>Primary Caption</h4>
+            <p id="lightbox-primary-caption" class="lightbox-caption-text">--</p>
+          </div>
+
+          <div class="lightbox-section" id="lightbox-all-captions-section">
+            <h4>Flickr30k Reference Captions</h4>
+            <ul id="lightbox-captions-list" class="lightbox-captions-list">
+              <!-- captions -->
+            </ul>
+          </div>
+
+          <div class="lightbox-meta-row">
+            <span>LanceDB Vector: 768-D Float32</span>
+            <a id="lightbox-raw-link" href="" target="_blank" class="lightbox-raw-btn">Open Raw Image ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
