@@ -198,7 +198,7 @@ body {
 /* Floating Active Search Summary Pill */
 .search-active-pill {
   position: fixed;
-  top: 72px;
+  top: 24px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 85;
@@ -311,7 +311,7 @@ body {
 .masonry-canvas {
   width: 100vw;
   min-height: 100vh;
-  padding: 84px 20px 160px;
+  padding: 24px 20px 160px;
 }
 
 .masonry-grid {
