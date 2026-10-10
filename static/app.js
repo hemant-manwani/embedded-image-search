@@ -181,18 +181,12 @@ document.addEventListener("DOMContentLoaded", () => {
         ? `<span class="rank-badge">#${item.rank}</span>`
         : `<span class="rank-badge">#${item.sample_idx}</span>`;
 
-      const captionText = item.caption || (item.captions && item.captions[0]) || "";
-
       card.innerHTML = `
         <div class="card-img-holder">
           <img src="${item.image_url}" alt="Sample #${item.sample_idx}" loading="lazy">
           <div class="card-badges-row">
             ${rankBadgeHtml}
             ${matchBadgeHtml}
-          </div>
-          <div class="card-scrim">
-            <p class="card-caption-text">"${escapeHtml(captionText)}"</p>
-            <span class="card-sample-id">Flickr30k #${item.sample_idx}</span>
           </div>
         </div>
       `;
